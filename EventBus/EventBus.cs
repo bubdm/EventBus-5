@@ -7,6 +7,11 @@ namespace RandomSolutions
 {
     public class EventBus<TEvent> : IEventBus<TEvent>
     {
+        public EventBus(Action<Exception> onError = null)
+        {
+            _onError = onError;
+        }
+
         public void Publish(object publisher, TEvent eventId, params object[] data)
         {
             _publish(new EventBusArgs
@@ -45,8 +50,14 @@ namespace RandomSolutions
                 if (!sub.Reference.IsAlive)
                     unsubs.Add(sub.Id);
                 else
-                    try { sub.Action.Invoke(args); }
-                    catch (Exception ex) { }
+                    try
+                    {
+                        sub.Action.Invoke(args);
+                    }
+                    catch (Exception ex)
+                    {
+                        _onError?.Invoke(new EventBusException(_errorSubscriberInvoke, ex));
+                    }
             });
 
             lock (_locker)
@@ -62,7 +73,7 @@ namespace RandomSolutions
             if (unsubs.Count > 0)
                 _unsubscribe(unsubs);
         }
-        
+
         Guid _subscribe(Subscriber sub)
         {
             if (sub.Action != null && sub.Reference.IsAlive)
@@ -130,5 +141,9 @@ namespace RandomSolutions
             = new Dictionary<TEvent, Dictionary<Guid, Subscriber>>();
 
         readonly object _locker = new Object();
+
+        readonly Action<Exception> _onError;
+
+        const string _errorSubscriberInvoke = "Subscriber's action invoke error";
     }
 }

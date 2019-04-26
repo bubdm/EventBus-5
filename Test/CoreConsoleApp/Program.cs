@@ -10,7 +10,7 @@ namespace CoreConsoleApp
     {
         static void Main(string[] args)
         {
-            var eventBus = new EventBus<Event>();
+            var eventBus = new EventBus<Event>(ex => Console.WriteLine(ex));
 
             var token = eventBus.Subscribe(null,
                 e => Console.WriteLine($"{e.Event}: {e.Data[0]}"),
@@ -26,7 +26,7 @@ namespace CoreConsoleApp
             {
                 var start = DateTime.Now;
                 var subsCount = 100000;
-                
+
                 var tokens = Enumerable.Range(0, subsCount)
                     .Select(x => eventBus.Subscribe(null, e => { /*Console.WriteLine($"{x}) {e.Event}: {e.Data[0]}");*/ }, Event.E3))
                     .ToArray();
@@ -37,7 +37,7 @@ namespace CoreConsoleApp
 
                 var eventsCount = 10;
 
-                foreach(var x in Enumerable.Range(0, eventsCount))
+                foreach (var x in Enumerable.Range(0, eventsCount))
                     eventBus.Publish(null, Event.E3, $"test#{x}");
 
                 Console.WriteLine($"Publishing:  {(int)(subsCount * eventsCount / (DateTime.Now - start).TotalSeconds)} invokes/sec");
