@@ -34,12 +34,19 @@ namespace RandomSolutions
                 if (!sub.Reference.IsAlive)
                     unsubs.Add(sub.Id);
                 else
-                    tasks.Add(Task.Run(() => sub.Action.Invoke(new EventBusArgs<TEvent>
+                    tasks.Add(Task.Run(() =>
                     {
-                        Event = eventId,
-                        Publisher = publisher,
-                        Data = data,
-                    })));
+                        try
+                        {
+                            sub.Action.Invoke(new EventBusArgs<TEvent>
+                            {
+                                Event = eventId,
+                                Publisher = publisher,
+                                Data = data,
+                            });
+                        }
+                        catch(Exception ex) { }
+                    }));
             });
 
             foreach (var anySub in _anyEventSubs)
