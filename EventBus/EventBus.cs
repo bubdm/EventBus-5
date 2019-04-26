@@ -144,6 +144,6 @@ namespace RandomSolutions
 
         readonly Action<Exception> _onError;
 
-        const string _errorSubscriberInvoke = "Subscriber's action invoke error";
+        static readonly string _errorSubscriberInvoke = "Subscriber's action invoke error";
     }
 }
