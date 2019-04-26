@@ -2,70 +2,46 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace RandomSolutions
 {
     public class EventBus<TEvent> : IEventBus<TEvent>
     {
-        public async Task Publish(object publisher, TEvent eventId, params object[] data)
+        public void Publish(object publisher, TEvent eventId, params object[] data)
         {
-            await Task.Run(() => _publish(publisher, eventId, data));
-        }
-
-        public async Task<Guid> Subscribe(object subscriber, Action<EventBusArgs<TEvent>> action, params TEvent[] events)
-        {
-            return await Task.Run(() => _subscribe(subscriber, action, events));
-        }
-
-        public async Task Unsubscribe(params Guid[] tokens)
-        {
-            if (tokens?.Length > 0)
-                await Task.Run(() => _unsubscribe(tokens));
-        }
-
-
-
-        void _publish(object publisher, TEvent eventId, params object[] data)
-        {
-            var tasks = new List<Task>();
             var unsubs = new List<Guid>();
             var invokeSub = new Action<Subscriber>(sub =>
             {
                 if (!sub.Reference.IsAlive)
                     unsubs.Add(sub.Id);
                 else
-                    tasks.Add(Task.Run(() =>
+                    try
                     {
-                        try
+                        sub.Action.Invoke(new EventBusArgs<TEvent>
                         {
-                            sub.Action.Invoke(new EventBusArgs<TEvent>
-                            {
-                                Event = eventId,
-                                Publisher = publisher,
-                                Data = data,
-                            });
-                        }
-                        catch (Exception ex) { }
-                    }));
+                            Event = eventId,
+                            Publisher = publisher,
+                            Data = data,
+                        });
+                    }
+                    catch (Exception ex) { }
             });
 
-            foreach (var anySub in _anyEventSubs)
-                invokeSub(anySub.Value);
-
-            Dictionary<Guid, Subscriber> eventSubs;
-
-            if (_eventSubs.TryGetValue(eventId, out eventSubs))
-                foreach (var eventSub in eventSubs)
-                    invokeSub(eventSub.Value);
+            lock (_locker)
+            {
+                foreach (var anySub in _anyEventSubs)
+                    invokeSub(anySub.Value);
+                
+                if (_eventSubs.ContainsKey(eventId))
+                    foreach (var eventSub in _eventSubs[eventId])
+                        invokeSub(eventSub.Value);
+            }
 
             if (unsubs.Count > 0)
-                tasks.Add(Task.Run(() => _unsubscribe(unsubs)));
-
-            Task.WhenAll(tasks).Wait();
+                _unsubscribe(unsubs);
         }
 
-        Guid _subscribe(object subscriber, Action<EventBusArgs<TEvent>> action, params TEvent[] events)
+        public Guid Subscribe(object subscriber, Action<EventBusArgs<TEvent>> action, params TEvent[] events)
         {
             var sub = new Subscriber
             {
@@ -91,6 +67,12 @@ namespace RandomSolutions
                 }
 
             return sub.Id;
+        }
+
+        public void Unsubscribe(params Guid[] tokens)
+        {
+            if (tokens?.Length > 0)
+                _unsubscribe(tokens);
         }
 
         void _unsubscribe(IEnumerable<Guid> tokens)

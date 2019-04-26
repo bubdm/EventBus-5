@@ -14,9 +14,9 @@ namespace CoreConsoleApp
 
             var token = eventBus.Subscribe(null,
                 e => Console.WriteLine($"{e.Event}: {e.Data[0]}"),
-                Event.E1, Event.E2).Result;
+                Event.E1, Event.E2);
 
-            //eventBus.Unsubscribe(token).Wait();
+            //eventBus.Unsubscribe(token);
             eventBus.Publish(null, Event.E1, "test1");
             eventBus.Publish(null, Event.E2, "test2");
 
@@ -25,28 +25,28 @@ namespace CoreConsoleApp
             Task.Run(() =>
             {
                 var start = DateTime.Now;
-                var subsCount = 10000;
+                var subsCount = 100000;
+                
+                var tokens = Enumerable.Range(0, subsCount)
+                    .Select(x => eventBus.Subscribe(null, e => { /*Console.WriteLine($"{x}) {e.Event}: {e.Data[0]}");*/ }, Event.E3))
+                    .ToArray();
 
-                var tokens = Task.WhenAll(Enumerable.Range(0, subsCount)
-                    .Select(x => eventBus.Subscribe(null, e => { /*Console.WriteLine($"{x}) {e.Event}: {e.Data[0]}");*/ }, Event.E3)))
-                    .Result;
-
-                Console.WriteLine($"\nSubscribing: {(subsCount / (DateTime.Now - start).TotalSeconds).ToString("#.##")} subs/sec");
-
-                start = DateTime.Now;
-
-                var eventsCount = 4;
-                Task.WhenAll(Enumerable.Range(0, eventsCount)
-                    .Select(x => eventBus.Publish(null, Event.E3, $"test#{x}")))
-                    .Wait();
-
-                Console.WriteLine($"Publishing:  {(subsCount * eventsCount / (DateTime.Now - start).TotalSeconds).ToString("#.##")} invokes/sec");
+                Console.WriteLine($"\nSubscribing: {(int)(subsCount / (DateTime.Now - start).TotalSeconds)} subs/sec");
 
                 start = DateTime.Now;
 
-                eventBus.Unsubscribe(tokens).Wait();
+                var eventsCount = 10;
 
-                Console.WriteLine($"Unsubscribing: {(subsCount / (DateTime.Now - start).TotalSeconds).ToString("#.##")} unsubs/sec");
+                foreach(var x in Enumerable.Range(0, eventsCount))
+                    eventBus.Publish(null, Event.E3, $"test#{x}");
+
+                Console.WriteLine($"Publishing:  {(int)(subsCount * eventsCount / (DateTime.Now - start).TotalSeconds)} invokes/sec");
+
+                start = DateTime.Now;
+
+                eventBus.Unsubscribe(tokens);
+
+                Console.WriteLine($"Unsubscribing: {(int)(subsCount / (DateTime.Now - start).TotalSeconds)} unsubs/sec");
             });
 
             Console.ReadKey();
