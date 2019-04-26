@@ -9,21 +9,43 @@ namespace RandomSolutions
     {
         public void Publish(object publisher, TEvent eventId, params object[] data)
         {
+            _publish(new EventBusArgs
+            {
+                Event = eventId,
+                Publisher = publisher,
+                Data = data,
+            });
+        }
+
+        public Guid Subscribe(object subscriber, Action<IEventBusArgs<TEvent>> action, params TEvent[] events)
+        {
+            return _subscribe(new Subscriber
+            {
+                Id = Guid.NewGuid(),
+                Reference = new WeakReference(subscriber ?? this),
+                Events = events?.Length > 0 ? events : null,
+                Action = action,
+            });
+        }
+
+        public void Unsubscribe(params Guid[] tokens)
+        {
+            if (tokens?.Length > 0)
+                _unsubscribe(tokens);
+        }
+
+
+
+        void _publish(IEventBusArgs<TEvent> args)
+        {
             var unsubs = new List<Guid>();
+
             var invokeSub = new Action<Subscriber>(sub =>
             {
                 if (!sub.Reference.IsAlive)
                     unsubs.Add(sub.Id);
                 else
-                    try
-                    {
-                        sub.Action.Invoke(new EventBusArgs<TEvent>
-                        {
-                            Event = eventId,
-                            Publisher = publisher,
-                            Data = data,
-                        });
-                    }
+                    try { sub.Action.Invoke(args); }
                     catch (Exception ex) { }
             });
 
@@ -31,27 +53,19 @@ namespace RandomSolutions
             {
                 foreach (var anySub in _anyEventSubs)
                     invokeSub(anySub.Value);
-                
-                if (_eventSubs.ContainsKey(eventId))
-                    foreach (var eventSub in _eventSubs[eventId])
+
+                if (_eventSubs.ContainsKey(args.Event))
+                    foreach (var eventSub in _eventSubs[args.Event])
                         invokeSub(eventSub.Value);
             }
 
             if (unsubs.Count > 0)
                 _unsubscribe(unsubs);
         }
-
-        public Guid Subscribe(object subscriber, Action<EventBusArgs<TEvent>> action, params TEvent[] events)
+        
+        Guid _subscribe(Subscriber sub)
         {
-            var sub = new Subscriber
-            {
-                Id = Guid.NewGuid(),
-                Reference = new WeakReference(subscriber ?? this),
-                Events = events?.Length > 0 ? events : null,
-                Action = action,
-            };
-
-            if (action != null && sub.Reference.IsAlive)
+            if (sub.Action != null && sub.Reference.IsAlive)
                 lock (_locker)
                 {
                     _subscribers.Add(sub.Id, sub);
@@ -67,12 +81,6 @@ namespace RandomSolutions
                 }
 
             return sub.Id;
-        }
-
-        public void Unsubscribe(params Guid[] tokens)
-        {
-            if (tokens?.Length > 0)
-                _unsubscribe(tokens);
         }
 
         void _unsubscribe(IEnumerable<Guid> tokens)
@@ -102,7 +110,14 @@ namespace RandomSolutions
             public Guid Id { get; set; }
             public WeakReference Reference { get; set; }
             public TEvent[] Events { get; set; }
-            public Action<EventBusArgs<TEvent>> Action { get; set; }
+            public Action<IEventBusArgs<TEvent>> Action { get; set; }
+        }
+
+        class EventBusArgs : IEventBusArgs<TEvent>
+        {
+            public TEvent Event { get; set; }
+            public object Publisher { get; set; }
+            public object[] Data { get; set; }
         }
 
         readonly Dictionary<Guid, Subscriber> _subscribers

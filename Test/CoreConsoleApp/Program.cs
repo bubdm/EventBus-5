@@ -16,8 +16,8 @@ namespace CoreConsoleApp
                 e => Console.WriteLine($"{e.Event}: {e.Data[0]}"),
                 Event.E1, Event.E2);
 
-            //eventBus.Unsubscribe(token);
             eventBus.Publish(null, Event.E1, "test1");
+            eventBus.Unsubscribe(token);
             eventBus.Publish(null, Event.E2, "test2");
 
 
