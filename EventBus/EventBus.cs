@@ -12,10 +12,10 @@ namespace RandomSolutions
         {
             await Task.Run(() => _publish(publisher, eventId, data));
         }
-        
+
         public async Task<Guid> Subscribe(object subscriber, Action<EventBusArgs<TEvent>> action, params TEvent[] events)
         {
-            return await Task.Run(()=> _subscribe(subscriber, action, events));
+            return await Task.Run(() => _subscribe(subscriber, action, events));
         }
 
         public async Task Unsubscribe(params Guid[] tokens)
@@ -30,7 +30,8 @@ namespace RandomSolutions
         {
             var tasks = new List<Task>();
             var unsubs = new List<Guid>();
-            var invokeSub = new Action<Subscriber>(sub => {
+            var invokeSub = new Action<Subscriber>(sub =>
+            {
                 if (!sub.Reference.IsAlive)
                     unsubs.Add(sub.Id);
                 else
@@ -45,7 +46,7 @@ namespace RandomSolutions
                                 Data = data,
                             });
                         }
-                        catch(Exception ex) { }
+                        catch (Exception ex) { }
                     }));
             });
 
@@ -128,7 +129,7 @@ namespace RandomSolutions
         readonly Dictionary<Guid, Subscriber> _anyEventSubs
             = new Dictionary<Guid, Subscriber>();
 
-        readonly Dictionary<TEvent, Dictionary<Guid, Subscriber>> _eventSubs 
+        readonly Dictionary<TEvent, Dictionary<Guid, Subscriber>> _eventSubs
             = new Dictionary<TEvent, Dictionary<Guid, Subscriber>>();
 
         readonly object _locker = new Object();
