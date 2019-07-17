@@ -8,6 +8,7 @@ namespace RandomSolutions
     {
         void Publish(object publisher, TEvent eventId, params object[] data);
         Guid Subscribe(object subscriber, Action<IEventBusArgs<TEvent>> action, params TEvent[] events);
+        event EventHandler<EventBusEventArgs<EventBusException>> OnError;
     }
 
     public interface IEventBus
