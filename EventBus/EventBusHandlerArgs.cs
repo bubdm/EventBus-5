@@ -4,9 +4,9 @@ using System.Text;
 
 namespace RandomSolutions
 {
-    public class EventBusEventArgs<T> : EventArgs
+    public class EventBusHandlerArgs<T> : EventArgs
     {
-        public EventBusEventArgs(T data)
+        public EventBusHandlerArgs(T data)
         {
             Data = data;
         }

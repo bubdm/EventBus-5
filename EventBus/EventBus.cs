@@ -43,7 +43,7 @@ namespace RandomSolutions
                 _unsubscribe(tokens);
         }
 
-        public event EventHandler<EventBusEventArgs<EventBusException>> OnError;
+        public event EventHandler<EventBusHandlerArgs<EventBusException>> OnError;
 
         void _publish(IEventBusArgs<TEvent> args)
         {
@@ -60,7 +60,7 @@ namespace RandomSolutions
                     }
                     catch (Exception ex)
                     {
-                        OnError?.Invoke(this, new EventBusEventArgs<EventBusException>(new EventBusException(_errorSubscriberInvoke, ex)));
+                        OnError?.Invoke(this, new EventBusHandlerArgs<EventBusException>(new EventBusException(_errorSubscriberInvoke, ex)));
                     }
             });
 
