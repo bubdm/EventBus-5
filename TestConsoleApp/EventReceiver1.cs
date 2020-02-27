@@ -3,13 +3,13 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace CoreConsoleApp
+namespace TestConsoleApp
 {
-    public class EventReceiver2 : IEventBusReceiver<Event>
+    public class EventReceiver1 : IEventBusReceiver<Event>
     {
-        public Event[] Events => new[] { Event.E2 };
+        public Event[] Events => new[] { Event.E1 };
+        public short Priority => 10;
 
-        public short Priority => 0;
 
         public void OnPublish(IEventBusArgs<Event> e)
         {

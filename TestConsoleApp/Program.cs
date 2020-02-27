@@ -4,7 +4,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace CoreConsoleApp
+namespace TestConsoleApp
 {
     class Program
     {
@@ -35,7 +35,7 @@ namespace CoreConsoleApp
             Task.Run(() =>
             {
                 var start = DateTime.Now;
-                var subsCount = 100000;
+                var subsCount = 1000000;
 
                 var tokens = Enumerable.Range(0, subsCount)
                     .Select(x => EventBus.Subscribe(null, e => { /*Console.WriteLine($"{x}) {e.Event}: {e.Data[0]}");*/ }, Event.E3))
