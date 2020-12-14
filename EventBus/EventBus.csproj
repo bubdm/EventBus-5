@@ -19,6 +19,9 @@
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/mustaddon/EventBus</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/mustaddon/EventBus</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
     <NeutralLanguage />
     <PackageReleaseNotes></PackageReleaseNotes>
   </PropertyGroup>
