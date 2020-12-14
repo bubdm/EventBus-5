@@ -19,8 +19,9 @@ namespace RandomSolutions
 
             _publish(new EventBusArgs
             {
-                Event = eventId,
+                Host = this,
                 Publisher = publisher,
+                Event = eventId,
                 Data = data,
             });
         }
@@ -153,6 +154,7 @@ namespace RandomSolutions
 
         class EventBusArgs : IEventBusArgs<TEvent>
         {
+            public IEventBus<TEvent> Host { get; set; }
             public TEvent Event { get; set; }
             public object Publisher { get; set; }
             public object[] Data { get; set; }

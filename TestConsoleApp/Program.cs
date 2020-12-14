@@ -14,7 +14,7 @@ namespace TestConsoleApp
             eventBus.OnError += (s, e) => Console.WriteLine(e.Data);
 
             var token = eventBus.Subscribe(null,
-                e => Console.WriteLine($"{e.Event}: {e.Data[0]}"),
+                e => Console.WriteLine($"{e.Event}: {e.Data.FirstOrDefault()}"),
                 Event.E1, Event.E2, Event.E3);
 
             eventBus.Publish(null, Event.E1, "test1");

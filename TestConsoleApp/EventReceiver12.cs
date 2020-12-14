@@ -1,5 +1,6 @@
 ﻿using RandomSolutions;
 using System;
+using System.Linq;
 
 namespace TestConsoleApp
 {
@@ -10,7 +11,7 @@ namespace TestConsoleApp
 
         public void OnPublish(IEventBusArgs<Event> e)
         {
-            Console.WriteLine($"{this.GetType().Name} > {e.Event}: {e.Data[0]}");
+            Console.WriteLine($"{e.Event}: {e.Data.FirstOrDefault()} ({this.GetType().Name})");
         }
     }
 }
