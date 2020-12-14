@@ -3,10 +3,11 @@ using System;
 
 namespace TestConsoleApp
 {
-    public class EventReceiver12 : IEventBusReceiver<Event>
+    public class EventReceiver3 : IEventBusReceiver<Event>
     {
-        public Event[] Events => new[] { Event.E1, Event.E2 };
-        public short Priority => 5;
+        public Event[] Events => new[] { Event.E3 };
+        public short Priority => 10;
+
 
         public void OnPublish(IEventBusArgs<Event> e)
         {

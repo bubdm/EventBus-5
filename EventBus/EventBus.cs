@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 
 namespace RandomSolutions
 {
@@ -9,15 +8,15 @@ namespace RandomSolutions
     {
         public EventBus(IEnumerable<IEventBusReceiver<TEvent>> eventReceivers = null)
         {
-            eventReceivers?
-                .GroupBy(x => x.GetType()).Select(g => g.First())
-                .OrderByDescending(x => x.Priority)
-                .ToList()
-                .ForEach(x => Subscribe(this, e => x.OnPublish(e), x.Events));
+            _eventReceivers = eventReceivers;
         }
+
+        readonly IEnumerable<IEventBusReceiver<TEvent>> _eventReceivers;
 
         public void Publish(object publisher, TEvent eventId, params object[] data)
         {
+            if (!_init) _initReceivers();
+
             _publish(new EventBusArgs
             {
                 Event = eventId,
@@ -45,6 +44,22 @@ namespace RandomSolutions
 
         public event EventHandler<EventBusHandlerArgs<EventBusException>> OnError;
 
+        void _initReceivers()
+        {
+            lock (_locker)
+            {
+                if (_init) return;
+
+                var tokens = _eventReceivers?.GroupBy(x => x.GetType())
+                    .Select(g => g.First())
+                    .OrderByDescending(x => x.Priority)
+                    .Select(x => Subscribe(this, e => x.OnPublish(e), x.Events))
+                    .ToList();
+
+                _init = true;
+            }
+        }
+
         void _publish(IEventBusArgs<TEvent> args)
         {
             var unsubs = new List<Guid>();
@@ -52,16 +67,19 @@ namespace RandomSolutions
             var invokeSub = new Action<Subscriber>(sub =>
             {
                 if (!sub.Reference.IsAlive)
+                {
                     unsubs.Add(sub.Id);
-                else
-                    try
-                    {
-                        sub.Action.Invoke(args);
-                    }
-                    catch (Exception ex)
-                    {
-                        OnError?.Invoke(this, new EventBusHandlerArgs<EventBusException>(new EventBusException(_errorSubscriberInvoke, ex)));
-                    }
+                    return;
+                }
+
+                try
+                {
+                    sub.Action.Invoke(args);
+                }
+                catch (Exception ex)
+                {
+                    OnError?.Invoke(this, new EventBusHandlerArgs<EventBusException>(new EventBusException(_errorSubscriberInvoke, ex)));
+                }
             });
 
             lock (_locker)
@@ -102,22 +120,27 @@ namespace RandomSolutions
         {
             lock (_locker)
                 foreach (var token in tokens)
-                    if (_subscribers.ContainsKey(token))
+                {
+                    if (!_subscribers.ContainsKey(token))
+                        continue;
+
+                    var sub = _subscribers[token];
+
+                    if (sub.Events == null)
                     {
-                        var sub = _subscribers[token];
-
-                        if (sub.Events == null)
-                            _anyEventSubs.Remove(sub.Id);
-                        else
-                            foreach (var e in sub.Events)
-                            {
-                                var eventSub = _eventSubs[e];
-                                eventSub.Remove(sub.Id);
-
-                                if (eventSub.Count == 0)
-                                    _eventSubs.Remove(e);
-                            }
+                        _anyEventSubs.Remove(sub.Id);
+                        continue;
                     }
+
+                    foreach (var e in sub.Events)
+                    {
+                        var eventSub = _eventSubs[e];
+                        eventSub.Remove(sub.Id);
+
+                        if (eventSub.Count == 0)
+                            _eventSubs.Remove(e);
+                    }
+                }
         }
 
         class Subscriber
@@ -135,6 +158,8 @@ namespace RandomSolutions
             public object[] Data { get; set; }
         }
 
+        bool _init = false;
+
         readonly Dictionary<Guid, Subscriber> _subscribers
             = new Dictionary<Guid, Subscriber>();
 
@@ -144,7 +169,7 @@ namespace RandomSolutions
         readonly Dictionary<TEvent, Dictionary<Guid, Subscriber>> _eventSubs
             = new Dictionary<TEvent, Dictionary<Guid, Subscriber>>();
 
-        readonly object _locker = new Object();
+        readonly object _locker = new object();
 
         static readonly string _errorSubscriberInvoke = "Subscriber's action invoke error";
     }

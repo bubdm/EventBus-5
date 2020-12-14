@@ -6,24 +6,21 @@
     <RootNamespace>RandomSolutions</RootNamespace>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>key.snk</AssemblyOriginatorKeyFile>
-	<AssemblyVersion>1.0.3</AssemblyVersion>
-    <FileVersion>1.0.3</FileVersion>
-    <Version>1.0.3</Version>
+	  <AssemblyVersion>1.0.4</AssemblyVersion>
+    <FileVersion>1.0.4</FileVersion>
+    <Version>1.0.4</Version>
     <Company></Company>
     <Authors>Leonid Salavatov</Authors>
-    <Copyright>Leonid Salavatov 2019</Copyright>
+    <Copyright>Leonid Salavatov 2020</Copyright>
     <Product>RandomSolutions.EventBus</Product>
     <Title>RandomSolutions.EventBus</Title>
     <Description>Publisher-subscriber (pub/sub) pattern implementation</Description>
     <PackageTags>eventbus pubsub publisher subscriber c# csharp</PackageTags>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <PackageLicenseUrl>https://licenses.nuget.org/MIT</PackageLicenseUrl>
-    <PackageProjectUrl>https://github.com/mustaddon/EventBus</PackageProjectUrl>
-    <RepositoryUrl>https://github.com/mustaddon/EventBus</RepositoryUrl>
-	<RepositoryType>git</RepositoryType>
-	<PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+    <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <NeutralLanguage />
-	<PackageReleaseNotes></PackageReleaseNotes>
+    <PackageReleaseNotes></PackageReleaseNotes>
   </PropertyGroup>
 
 </Project>
